@@ -1,10 +1,6 @@
 import discord
-import logging
-import traceback
 
 from config import BEAR1_ROLE_ID, BEAR2_ROLE_ID
-
-logger = logging.getLogger("SAVGuardian")
 
 
 class BearSelect(discord.ui.Select):
@@ -30,11 +26,12 @@ class BearSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        # Acquitter l'interaction immédiatement pour éviter le timeout de 3s
-        # (surtout sur mobile où la latence est plus élevée)
-        await interaction.response.defer(ephemeral=True)
+        print("🐻 STEP 1 - callback déclenché", flush=True)
 
         try:
+            await interaction.response.defer(ephemeral=True)
+            print("🐻 STEP 2 - defer OK", flush=True)
+
             member = interaction.user
 
             bear1_role = interaction.guild.get_role(BEAR1_ROLE_ID)
@@ -48,12 +45,14 @@ class BearSelect(discord.ui.Select):
             # Retire les deux rôles Bear en un seul appel pour éviter les doublons
             # (Discord ignore silencieusement les rôles que le membre n'a pas)
             await member.remove_roles(bear1_role, bear2_role)
+            print("🐻 STEP 3 - remove_roles OK", flush=True)
 
             # Attribue le rôle choisi
             if self.values[0] == "Bear 1":
                 await member.add_roles(bear1_role)
             else:
                 await member.add_roles(bear2_role)
+            print("🐻 STEP 4 - add_roles OK", flush=True)
 
             await interaction.followup.send(
                 f"✅ Check-In completed successfully!\n\n"
@@ -61,10 +60,9 @@ class BearSelect(discord.ui.Select):
                 f"🐻 You have been assigned to **{self.values[0]}**.",
                 ephemeral=True
             )
+            print("🐻 STEP 5 - followup envoyé", flush=True)
 
         except Exception as e:
-            logger.exception("BearSelect error")
-            await interaction.followup.send(
-                f"❌ Une erreur est survenue : `{e}`",
-                ephemeral=True
-            )
+            print(f"🔴 ERREUR CAPTURÉE : {type(e).__name__} - {e}", flush=True)
+            import traceback
+            traceback.print_exc()
