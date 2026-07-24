@@ -108,21 +108,30 @@ class CheckInModal(discord.ui.Modal, title="Complete Check-In"):
 """)
 
             # Si SAV → choix Bear
+            # Solution A : on édite la réponse originale (le placeholder du defer)
+            # au lieu d'envoyer un followup. Cela évite d'empiler plusieurs
+            # messages éphémères, ce qui cause "Échec de l'interaction" sur
+            # l'app mobile Discord après un modal submit.
             if self.alliance == "SAV":
-                await interaction.followup.send(
-                    "🐻 Choose your Bear group:",
+                await interaction.edit_original_response(
+                    content="🐻 Choose your Bear group:",
                     view=BearView(),
-                    ephemeral=True
                 )
             else:
-                await interaction.followup.send(
-                    "✅ Check-In completed successfully!\n\nWelcome to **SAV Family**! 🛡️",
-                    ephemeral=True
+                await interaction.edit_original_response(
+                    content="✅ Check-In completed successfully!\n\nWelcome to **SAV Family**! 🛡️",
                 )
 
-        except Exception as e:
+        except Exception:
             logger.exception("Check-In error")
-            await interaction.followup.send(
-                "❌ An error occurred during Check-In. Please contact an admin.",
-                ephemeral=True
-            )
+            try:
+                await interaction.edit_original_response(
+                    content="❌ An error occurred during Check-In. Please contact an admin.",
+                    view=None,
+                )
+            except Exception:
+                # Fallback si l'édition échoue (token expiré, etc.)
+                await interaction.followup.send(
+                    "❌ An error occurred during Check-In. Please contact an admin.",
+                    ephemeral=True,
+                )
