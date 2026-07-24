@@ -6,6 +6,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from views.checkin_view import CheckInView
+from views.bear_view import BearView
 
 load_dotenv()
 
@@ -33,8 +34,9 @@ class SAVGuardian(commands.Bot):
         )
 
     async def setup_hook(self):
-        # Enregistre la vue persistante pour que le bouton survive aux redémarrages
+        # Enregistre les vues persistantes pour qu'elles survivent aux redémarrages
         self.add_view(CheckInView())
+        self.add_view(BearView())
 
         await self.load_extension("cogs.checkin")
 
