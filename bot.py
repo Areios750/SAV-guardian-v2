@@ -1,5 +1,9 @@
 import os
+import sys
 import logging
+
+# Force le flush immédiat des logs (nécessaire sur Railway / Docker)
+sys.stdout.reconfigure(line_buffering=True)
 
 import discord
 from discord.ext import commands
