@@ -1,6 +1,5 @@
 import discord
 import logging
-import traceback
 
 from config import BEAR1_ROLE_ID, BEAR2_ROLE_ID
 
@@ -31,20 +30,18 @@ class BearSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        # Acquitter l'interaction immédiatement pour éviter le timeout de 3s
-        # (surtout sur mobile où la latence est plus élevée)
-        await interaction.response.defer(ephemeral=True)
+        logger.info(f"BearSelect.callback déclenché par {interaction.user} — choix : {self.values}")
 
         try:
+            await interaction.response.defer(ephemeral=True)
+
             member = interaction.user
 
             bear1_role = interaction.guild.get_role(BEAR1_ROLE_ID)
             bear2_role = interaction.guild.get_role(BEAR2_ROLE_ID)
 
             if bear1_role is None or bear2_role is None:
-                raise ValueError(
-                    f"Rôle introuvable — Bear1: {bear1_role}, Bear2: {bear2_role}"
-                )
+                raise ValueError(f"Rôle introuvable — Bear1: {bear1_role}, Bear2: {bear2_role}")
 
             # Retire les deux rôles Bear en un seul appel pour éviter les doublons
             # (Discord ignore silencieusement les rôles que le membre n'a pas)
@@ -64,8 +61,11 @@ class BearSelect(discord.ui.Select):
             )
 
         except Exception as e:
-            logger.exception("BearSelect error")
-            await interaction.followup.send(
-                f"❌ Une erreur est survenue : `{e}`",
-                ephemeral=True
-            )
+            logger.exception("BearSelect.callback erreur")
+            try:
+                await interaction.followup.send(
+                    "❌ Une erreur est survenue. Contacte un admin.",
+                    ephemeral=True
+                )
+            except Exception:
+                pass
